@@ -187,7 +187,7 @@ function buildAPI(globalOptions, html, jar) {
       console.error('Database connection failed:', error.message);
     }
   })();
-  logger(`FCA fix by DongDev`, 'info');
+  logger(`FCA fix by xnil6x`, 'info');
   const ctx = {
     userID: userID,
     i_userID: i_userID,
