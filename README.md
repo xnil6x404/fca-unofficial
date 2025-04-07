@@ -2,9 +2,7 @@
 
 ![20241210_183831](https://files.catbox.moe/4rl0za.webp)
 
-<h2 align="center"><b>Unoffcial Facebook Chat API</b></h2><br>This package is created by <b>DongDev</b>
-
-![Image](https://files.catbox.moe/8urnyq.png)
+<h2 align="center"><b>Unoffcial Facebook Chat API</b></h2><br>This package is created by <b>DongDev **modified by xnil**</b>
 
 _Disclaimer_: We are not responsible if your account gets banned for spammy activities such as sending lots of messages to people you don't know, sending messages very quickly, sending spammy looking URLs, logging in and out very quickly... Be responsible Facebook citizens.
 
