@@ -2,7 +2,7 @@
 
 const utils = require("../utils");
 const log = require("npmlog");
-const generateOfflineThreadingID = require("../utils"); // Assuming this is available
+const { generateOfflineThreadingID } = require("../utils");
 
 module.exports = function(defaultFuncs, api, ctx) {
   return function editMessage(text, messageID, callback) {
@@ -14,22 +14,30 @@ module.exports = function(defaultFuncs, api, ctx) {
     });
     
     if (!callback) {
-      callback = function(err) {
+      callback = function(err, data) {
         if (err) {
           return rejectFunc(err);
         }
-        resolveFunc();
+        resolveFunc(data);
       };
     }
     
     if (!ctx.mqttClient) {
       const error = new Error("Not connected to MQTT");
       log.error("editMessage", error);
-      return callback(error);
+      callback(error);
+      return returnPromise;
     }
     
-    ctx.wsReqNumber += 1;
-    ctx.wsTaskNumber += 1;
+    if (typeof text !== "string" || typeof messageID !== "string") {
+      const error = new Error("Invalid arguments: text and messageID must be strings");
+      log.error("editMessage", error);
+      callback(error);
+      return returnPromise;
+    }
+    
+    ctx.wsReqNumber = (ctx.wsReqNumber || 0) + 1;
+    ctx.wsTaskNumber = (ctx.wsTaskNumber || 0) + 1;
     
     const queryPayload = {
       message_id: messageID,
@@ -48,7 +56,7 @@ module.exports = function(defaultFuncs, api, ctx) {
       app_id: "2220391788200892",
       payload: {
         data_trace_id: null,
-        epoch_id: parseInt(generateOfflineThreadingId()),
+        epoch_id: parseInt(generateOfflineThreadingID()),
         tasks: [query],
         version_id: "6903494529735864"
       },
@@ -56,7 +64,8 @@ module.exports = function(defaultFuncs, api, ctx) {
       type: 3
     };
     
-    context.payload = JSON.stringify(context.payload);
+    const payloadString = JSON.stringify(context.payload);
+    context.payload = payloadString;
     
     ctx.mqttClient.publish("/ls_req", JSON.stringify(context), { qos: 1, retain: false }, function(err) {
       if (err) {
