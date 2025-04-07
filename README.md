@@ -23,16 +23,16 @@ This API is the only way to automate chat functionalities on a user account. We 
 If you just want to use @dongdev/fca-unofficial, you should use this command:
 
 ```bash
-npm install @dongdev/fca-unofficial@latest
+npm install @xnil6x/fca-unofficial
 ```
 
-It will download @dongdev/fca-unofficial from NPM repositories
+It will download @xnil6x/fca-unofficial from NPM repositories
 
 ## Example Usage
 
 ```javascript
 
-const login = require("@dongdev/fca-unofficial");
+const login = require("@xnil6x/fca-unofficial");
 
 login({ appState: [] }, (err, api) => {
     if (err) return console.error(err);
@@ -71,7 +71,7 @@ __Tip__: to find your own ID, you can look inside the cookies. The `userID` is u
 __Example (Basic Message)__
 
 ```js
-const login = require("@dongdev/fca-unofficial");
+const login = require("@xnil6x/fca-unofficial");
 
 login({ appState: [] }, (err, api) => {
     if (err) {
@@ -93,7 +93,7 @@ login({ appState: [] }, (err, api) => {
 __Example (File upload)__
 
 ```js
-const login = require("@dongdev/fca-unofficial");
+const login = require("@xnil6x/fca-unofficial");
 const fs = require("fs"); // ✅ Required the fs module
 
 login({ appState: [] }, (err, api) => {
@@ -134,7 +134,7 @@ __Example__
 
 ```js
 const fs = require("fs");
-const login = require("@dongdev/fca-unofficial");
+const login = require("@xnil6x/fca-unofficial");
 
 const credentials = { appState: [] };
 
@@ -169,7 +169,7 @@ __Example__
 
 ```js
 const fs = require("fs");
-const login = require("@dongdev/fca-unofficial");
+const login = require("@xnil6x/fca-unofficial");
 
 // Simple echo bot: Repeats everything you say. Stops when you say "/stop".
 login({ appState: JSON.parse(fs.readFileSync("appstate.json", "utf8")) }, (err, api) => {
