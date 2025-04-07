@@ -2,7 +2,7 @@
 
 const utils = require("../utils");
 const log = require("npmlog");
-const generateOfflineThreadingId = require("../utils"); // Assuming this is available
+const generateOfflineThreadingID = require("../utils"); // Assuming this is available
 
 module.exports = function(defaultFuncs, api, ctx) {
   return function editMessage(text, messageID, callback) {
