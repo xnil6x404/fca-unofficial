@@ -9,8 +9,6 @@ const { getFrom } = require("../src/utils/constants");
 const { loadConfig } = require("./config");
 const { config } = loadConfig();
 const axiosBase = require("axios");
-const parseUserHtml = require("./parseUseerHtml");
-
 const regions = [
   { code: "PRN", name: "Pacific Northwest Region", location: "Khu vực Tây Bắc Thái Bình Dương" },
   { code: "VLL", name: "Valley Region", location: "Valley" },
@@ -1056,7 +1054,6 @@ function loginHelper(appState, Cookie, email, password, globalOptions, callback)
         let fb_dtsg;
         let irisSeqID;
         try {
-          parseUserHtml(html);
           const m1 = html.match(/"endpoint":"([^"]+)"/);
           const m2 = m1 ? null : html.match(/endpoint\\":\\"([^\\"]+)\\"/);
           const raw = (m1 && m1[1]) || (m2 && m2[1]);
