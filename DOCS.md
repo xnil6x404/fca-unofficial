@@ -1,8 +1,23 @@
-# FCA-Unofficial - Complete API Documentation
+# FCA-Unofficial — API Documentation
 
 ## Introduction
 
-**@dongdev/fca-unofficial** is an unofficial Node.js library for interacting with Facebook Messenger by emulating browser behavior. This library allows you to create chat bots and automate tasks on Facebook Messenger.
+**@dongdev/fca-unofficial** is an unofficial Node.js library for interacting with Facebook Messenger by emulating browser behavior. It lets you build chatbots and automate messaging on personal Facebook accounts (not just Pages).
+
+## Project structure
+
+| Path | Description |
+|------|--------------|
+| `index.js` | Package entry point; exports `login`. |
+| `index.d.ts` | TypeScript definitions for the public API. |
+| `module/` | Login flow: `login.js`, `loginHelper.js`, `config.js`, `options.js`. |
+| `src/api/` | API implementations: `messaging/`, `threads/`, `users/`, `action/`, `http/`, `socket/`. |
+| `src/api/socket/` | MQTT/WebSocket real-time listening (`listenMqtt.js`, `core/`, `middleware/`). |
+| `src/utils/` | Shared utilities: `request.js`, `client.js`, `format.js`, `headers.js`, `cookies.js`. |
+| `src/database/` | Optional Sequelize models for threads/users. |
+| `func/` | Logger, check-update, and other helpers. |
+
+For a concise codebase overview, see [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md).
 
 ## Installation
 
@@ -123,11 +138,45 @@ login(credentials, (err, api) => {
 });
 ```
 
-**Note:** You can use [c3c-fbstate](https://github.com/c3cbot/c3c-fbstate) tool to get AppState from browser.
+You can use the [c3c-fbstate](https://github.com/c3cbot/c3c-fbstate) tool to obtain AppState from your browser.
+
+### 1.4. Auto Login (session recovery)
+
+When the session (AppState) expires, the library can automatically re-login using credentials from **`fca-config.json`**, so the bot can recover without manual restart.
+
+1. Create **`fca-config.json`** in your project root (the directory from which you run your bot):
+
+```json
+{
+  "autoLogin": true,
+  "apiServer": "https://minhdong.site",
+  "apiKey": "",
+  "credentials": {
+    "email": "your_email_or_phone",
+    "password": "your_password",
+    "twofactor": ""
+  }
+}
+```
+
+2. Log in with AppState as usual. When the session expires, the library will use these credentials (and optionally the external API at `apiServer`) to log in again and retry the failed request.
+
+| Option | Description |
+|--------|-------------|
+| `autoLogin` | `true` (default) or `false`. Set to `false` to disable automatic re-login when session expires. |
+| `apiServer` | Base URL for external login API (e.g. iOS-style login). Default: `https://minhdong.site`. |
+| `apiKey` | Optional API key for the external login server (e.g. `x-api-key` header). |
+| `credentials.email` | Facebook email or phone number. |
+| `credentials.password` | Facebook password. |
+| `credentials.twofactor` | Base32 secret for 2FA (TOTP). Leave empty if you do not use 2FA. Do not put the 6-digit code here. |
+
+**Security:** Add `fca-config.json` to `.gitignore`; it contains sensitive credentials.
 
 ---
 
 ## 2. CONFIGURATION (Options)
+
+### 2.1. Runtime options (api.setOptions)
 
 After login, you can configure API options:
 
@@ -152,6 +201,19 @@ api.setOptions({
     userAgent: "Mozilla/5.0..."
 });
 ```
+
+### 2.2. File config (fca-config.json)
+
+Optional config file in the project root (see [§ 1.4. Auto Login](#14-auto-login-session-recovery)):
+
+| Key | Description |
+|-----|-------------|
+| `autoLogin` | Enable/disable automatic re-login when session expires (default: `true`). |
+| `autoUpdate` | Check for package updates on startup (default: `true`). |
+| `mqtt` | `{ enabled, reconnectInterval }` for MQTT. |
+| `apiServer` | Base URL for external login API (default: `https://minhdong.site`). |
+| `apiKey` | Optional API key for the login server. |
+| `credentials` | `{ email, password, twofactor }` for auto-login and external API login. |
 
 ---
 

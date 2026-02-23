@@ -1,4 +1,8 @@
 "use strict";
+/**
+ * Emits account_inactive to the global callback and cleans up MQTT/timers/scheduler.
+ * Used when login is invalid, blocked, or session is lost.
+ */
 module.exports = function createEmitAuth({ logger }) {
   return function emitAuth(ctx, api, globalCallback, reason, detail) {
     // Clean up all timers

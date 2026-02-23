@@ -1,7 +1,14 @@
 "use strict";
-
+/**
+ * Builds a duplex stream over WebSocket for MQTT: proxy for writes, PassThrough for reads.
+ * Handles ping/pong, liveness timeout, and clean shutdown.
+ */
 const { Writable, PassThrough } = require("stream");
 const Duplexify = require("duplexify");
+
+const PING_INTERVAL_MS = 30000;
+const LIVENESS_CHECK_MS = 10000;
+const LIVENESS_MAX_IDLE_MS = 65000;
 
 function buildProxy() {
   let target = null;
@@ -94,13 +101,13 @@ function buildStream(options, WebSocket, Proxy) {
       } else {
         try { ws.send("ping"); } catch { }
       }
-    }, 30000);
+    }, PING_INTERVAL_MS);
     livenessTimer = setInterval(() => {
       if (!ws || ws.readyState !== 1) return;
-      if (Date.now() - lastActivity > 65000) {
+      if (Date.now() - lastActivity > LIVENESS_MAX_IDLE_MS) {
         try { typeof ws.terminate === "function" ? ws.terminate() : ws.close(); } catch { }
       }
-    }, 10000);
+    }, LIVENESS_CHECK_MS);
   };
 
   const onMessage = data => {

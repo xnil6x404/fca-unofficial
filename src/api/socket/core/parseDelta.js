@@ -1,6 +1,10 @@
 "use strict";
+/**
+ * Parses MQTT delta payloads into normalized events: NewMessage, ClientPayload (reactions, unsend, reply), read receipts, etc.
+ */
 const { formatDeltaEvent, formatMessage, _formatAttachment, formatDeltaMessage, formatDeltaReadReceipt, formatID, getType, decodeClientPayload, getMentionsFromDeltaMessage } = require("../../../utils/format");
 const logger = require("../../../../func/logger");
+
 module.exports = function createParseDelta(deps) {
   const { parseAndCheckLogin } = deps;
   return function parseDelta(defaultFuncs, api, ctx, globalCallback, { delta }) {

@@ -1,9 +1,13 @@
 "use strict";
+/**
+ * Fetches MQTT sync sequence ID from GraphQL and starts listenMqtt.
+ * Handles retries and auto re-login via fca-config.json when session expires.
+ */
 const { getType } = require("../../../utils/format");
 const { parseAndCheckLogin, saveCookies } = require("../../../utils/client");
 const path = require("path");
+const loginHelper = require("../../../../module/loginHelper");
 
-// Load config for auto-login credentials
 function getConfig() {
   try {
     const configPath = path.join(process.cwd(), "fca-config.json");
@@ -51,7 +55,6 @@ async function tryAutoLogin(logger, config, ctx, defaultFuncs) {
   logger("getSeqID: attempting auto re-login via API...", "warn");
 
   try {
-    const loginHelper = require("../../../../module/loginHelper");
     const result = await loginHelper.tokensViaAPI(
       email,
       password,
@@ -60,14 +63,9 @@ async function tryAutoLogin(logger, config, ctx, defaultFuncs) {
     );
 
     if (result && result.status) {
-      // Handle cookies - can be array, cookie string header, or both
-      // Import normalizeCookieHeaderString from loginHelper
-      const loginHelper = require("../../../../module/loginHelper");
       const normalizeCookieHeaderString = loginHelper.normalizeCookieHeaderString;
-      
       let cookiePairs = [];
-      
-      // If cookies is a string (cookie header format), parse it
+
       if (typeof result.cookies === "string") {
         cookiePairs = normalizeCookieHeaderString(result.cookies);
       } 

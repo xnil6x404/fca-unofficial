@@ -1,5 +1,13 @@
 "use strict";
+/**
+ * MQTT/WebSocket listener for Facebook Messenger real-time events.
+ * Connects to edge-chat.facebook.com, subscribes to topics, parses deltas and typing/presence.
+ */
 const { formatID } = require("../../../utils/format");
+
+const DEFAULT_RECONNECT_DELAY_MS = 2000;
+const T_MS_WAIT_TIMEOUT_MS = 5000;
+
 module.exports = function createListenMqtt(deps) {
   const { WebSocket, mqtt, HttpsProxyAgent, buildStream, buildProxy,
     topics, parseDelta, getTaskResponseData, logger, emitAuth
@@ -8,7 +16,7 @@ module.exports = function createListenMqtt(deps) {
   return function listenMqtt(defaultFuncs, api, ctx, globalCallback) {
 
     function scheduleReconnect(delayMs) {
-      const d = (ctx._mqttOpt && ctx._mqttOpt.reconnectDelayMs) || 2000;
+      const d = (ctx._mqttOpt && ctx._mqttOpt.reconnectDelayMs) || DEFAULT_RECONNECT_DELAY_MS;
       const ms = typeof delayMs === "number" ? delayMs : d;
       if (ctx._reconnectTimer) {
         logger("mqtt reconnect already scheduled", "warn");
@@ -113,9 +121,8 @@ module.exports = function createListenMqtt(deps) {
       if (ctx._ending || ctx._cycling) return;
 
       if (ctx.globalOptions.autoReconnect && !ctx._ending) {
-        const d = (ctx._mqttOpt && ctx._mqttOpt.reconnectDelayMs) || 2000;
+        const d = (ctx._mqttOpt && ctx._mqttOpt.reconnectDelayMs) || DEFAULT_RECONNECT_DELAY_MS;
         logger(`mqtt autoReconnect listenMqtt() in ${d}ms`, "warn");
-        // Use scheduleReconnect to prevent multiple reconnections
         scheduleReconnect(d);
       } else {
         globalCallback({ type: "stop_listen", error: msg || "Connection refused" }, null);
@@ -124,7 +131,7 @@ module.exports = function createListenMqtt(deps) {
 
     mqttClient.on("connect", function () {
       if (process.env.OnStatus === undefined) {
-        logger("fca-unoffcial premium", "info");
+        logger("fca-unofficial", "info");
         process.env.OnStatus = true;
       }
       ctx._cycling = false;
@@ -141,7 +148,7 @@ module.exports = function createListenMqtt(deps) {
       mqttClient.publish(topic, JSON.stringify(queue), { qos: 1, retain: false });
       mqttClient.publish("/foreground_state", JSON.stringify({ foreground: chatOn }), { qos: 1 });
       mqttClient.publish("/set_client_settings", JSON.stringify({ make_user_available_when_in_foreground: true }), { qos: 1 });
-      const d = (ctx._mqttOpt && ctx._mqttOpt.reconnectDelayMs) || 2000;
+      const d = (ctx._mqttOpt && ctx._mqttOpt.reconnectDelayMs) || DEFAULT_RECONNECT_DELAY_MS;
       let rTimeout = setTimeout(function () {
         rTimeout = null;
         if (ctx._ending) {
@@ -155,7 +162,7 @@ module.exports = function createListenMqtt(deps) {
           }
         } catch (_) { }
         scheduleReconnect(d);
-      }, 5000);
+      }, T_MS_WAIT_TIMEOUT_MS);
 
       // Store timeout reference for cleanup
       ctx._rTimeout = rTimeout;
@@ -216,8 +223,9 @@ module.exports = function createListenMqtt(deps) {
         } else if (topic === "/ls_resp") {
           const parsedPayload = JSON.parse(jsonMessage.payload);
           const reqID = jsonMessage.request_id;
-          if (ctx["tasks"].has(reqID)) {
-            const taskData = ctx["tasks"].get(reqID);
+          const tasks = ctx.tasks;
+          if (tasks && tasks instanceof Map && tasks.has(reqID)) {
+            const taskData = tasks.get(reqID);
             const { type: taskType, callback: taskCallback } = taskData;
             const taskRespData = getTaskResponseData(taskType, parsedPayload);
             if (taskRespData == null) taskCallback("error", null);

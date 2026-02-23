@@ -569,7 +569,7 @@ async function tryAutoLoginIfNeeded(currentHtml, currentCookies, globalOptions, 
 
   // Check if auto-login is enabled (support both true and "true")
   if (config.autoLogin === false || config.autoLogin === "false") {
-    throw new Error("AppState backup die — Auto-login is disabled");
+    throw new Error("AppState expired — Auto-login is disabled");
   }
 
   // Try API login
@@ -879,7 +879,7 @@ function loginHelper(appState, Cookie, email, password, globalOptions, callback)
         const initial = await get("https://www.facebook.com/", jar, null, globalOptions).then(saveCookies(jar));
         return (await ctx.bypassAutomation(initial, jar)) || initial;
       }
-      logger("AppState backup die — proceeding to email/password login", "warn");
+      logger("AppState expired — proceeding to email/password login", "warn");
       return get("https://www.facebook.com/", null, null, globalOptions)
         .then(saveCookies(jar))
         .then(makeLogin(jar, email, password, globalOptions))

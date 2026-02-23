@@ -1,4 +1,8 @@
 "use strict";
+/**
+ * MQTT topic list for Facebook Messenger real-time connection.
+ * Subscriptions are created in connectMqtt on "connect".
+ */
 module.exports = {
   topics: [
     "/ls_req",

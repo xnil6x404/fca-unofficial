@@ -1,4 +1,7 @@
 "use strict";
+/**
+ * Maps /ls_resp task types to a normalized response shape for send_message_mqtt, set_message_reaction, edit_message.
+ */
 module.exports = function getTaskResponseData(taskType, payload) {
   try {
     switch (taskType) {

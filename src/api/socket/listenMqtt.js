@@ -1,4 +1,8 @@
 "use strict";
+/**
+ * Socket/MQTT entry: wires getSeqID -> listenMqtt, middleware, stopListening, and post guard.
+ * Exported as the function that attaches listenMqtt + middleware API to the login context.
+ */
 const mqtt = require("mqtt");
 const WebSocket = require("ws");
 const HttpsProxyAgent = require("https-proxy-agent");
@@ -13,15 +17,17 @@ const createGetSeqID = require("./core/getSeqID");
 const getTaskResponseData = require("./core/getTaskResponseData");
 const createEmitAuth = require("./core/emitAuth");
 const createMiddlewareSystem = require("./middleware");
+
+const CYCLE_MS_DEFAULT = 60 * 60 * 1000;
+const RECONNECT_DELAY_MS_DEFAULT = 2000;
+const UNSUB_ALL_TIMEOUT_MS = 5000;
+
 const parseDelta = createParseDelta({ parseAndCheckLogin });
-// Create emitAuth first so it can be injected into both factories
 const emitAuth = createEmitAuth({ logger });
-// Pass emitAuth into connectMqtt so errors there can signal auth state
 const listenMqtt = createListenMqtt({ WebSocket, mqtt, HttpsProxyAgent, buildStream, buildProxy, topics, parseDelta, getTaskResponseData, logger, emitAuth });
-// Inject emitAuth into getSeqID so its catch handler can notify properly
 const getSeqIDFactory = createGetSeqID({ parseAndCheckLogin, listenMqtt, logger, emitAuth });
 
-const MQTT_DEFAULTS = { cycleMs: 60 * 60 * 1000, reconnectDelayMs: 2000, autoReconnect: true, reconnectAfterStop: false };
+const MQTT_DEFAULTS = { cycleMs: CYCLE_MS_DEFAULT, reconnectDelayMs: RECONNECT_DELAY_MS_DEFAULT, autoReconnect: true, reconnectAfterStop: false };
 function mqttConf(ctx, overrides) {
   ctx._mqttOpt = Object.assign({}, MQTT_DEFAULTS, ctx._mqttOpt || {}, overrides || {});
   if (typeof ctx._mqttOpt.autoReconnect === "boolean") ctx.globalOptions.autoReconnect = ctx._mqttOpt.autoReconnect;
@@ -126,7 +132,7 @@ module.exports = function (defaultFuncs, api, ctx, opts) {
         logger("unsubAll timeout, proceeding anyway", "warn");
         if (cb) cb();
       }
-    }, 5000); // 5 second timeout
+    }, UNSUB_ALL_TIMEOUT_MS);
 
     topics.forEach(t => {
       try {
